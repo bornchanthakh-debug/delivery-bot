@@ -2,29 +2,23 @@ import os
 import logging
 import re
 import cv2
-import easyocr
+import pytesseract
 import numpy as np
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters, CommandHandler
-from aiohttp import web
 
 # --- ការកំណត់ Environment ---
-BOT_TOKEN = os.getenv('8726446573:AAGlSh4ZrIOJIeeP53CS8O27AIJqSgIxai8')
+BOT_TOKEN = os.getenv('BOT_TOKEN')
 BOT_USERNAME = 'autosenderBaggage_phone_bot'
 GROUP_CHAT_ID = '-5116254772'
 
-# Render នឹងផ្តល់ PORT មកអោយយើងដោយស្វ័យប្រវត្តិ
 PORT = int(os.environ.get('PORT', '8080'))
-# URL របស់កម្មវិធីអ្នកនៅលើ Render (អ្នកនឹងបានវាពេលបង្កើតរួច)
 WEBHOOK_URL = os.environ.get('WEBHOOK_URL')
-
-reader = easyocr.Reader(['en'], gpu=False)
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-# --- មុខងាររបស់ Bot (រក្សាទុកដដែល) ---
+# --- មុខងាររបស់ Bot ---
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # កូដ handle_photo ដដែល...
     photo_file = await update.message.photo[-1].get_file()
     photo_bytes = await photo_file.download_as_bytearray()
     nparr = np.frombuffer(photo_bytes, np.uint8)
@@ -32,8 +26,8 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text("🔎 កំពុងចាប់យកលេខទូរស័ព្ទ...")
 
-    results = reader.readtext(image)
-    raw_text = "".join([res[1] for res in results])
+    # ប្រើ Pytesseract ជំនួស EasyOCR
+    raw_text = pytesseract.image_to_string(image)
     cleaned_text = re.sub(r'\D', '', raw_text)
     phone_match = re.search(r'\d{9,10}', cleaned_text)
 
@@ -61,7 +55,6 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ រកមិនឃើញលេខទូរស័ព្ទទេ។")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # កូដ start ដដែល...
     if context.args:
         expected_phone = context.args[0]
         context.user_data['expected_phone'] = expected_phone
@@ -72,7 +65,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("សូមស្វាគមន៍! Bot នេះប្រើសម្រាប់តែទទួលទីតាំងដឹកឥវ៉ាន់ប៉ុណ្ណោះ។")
 
 async def handle_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # កូដ handle_contact ដដែល...
     contact = update.message.contact
     expected_phone = context.user_data.get('expected_phone')
     if contact and expected_phone:
@@ -87,14 +79,12 @@ async def handle_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("❌ ការផ្ទៀងផ្ទាត់បរាជ័យ!", reply_markup=ReplyKeyboardRemove())
 
 async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # កូដ handle_location ដដែល...
     location = update.message.location
     expected_phone = context.user_data.get('expected_phone', 'មិនស្គាល់លេខ')
     if location:
         maps_url = f"https://www.google.com/maps?q={location.latitude},{location.longitude}"
         await context.bot.send_message(chat_id=GROUP_CHAT_ID, text=f"📍 **ទីតាំងពី៖** {expected_phone}\n🔗 {maps_url}")
         await update.message.reply_text("🙏 អរគុណច្រើន!", reply_markup=ReplyKeyboardRemove())
-
 
 if __name__ == '__main__':
     if not BOT_TOKEN:
