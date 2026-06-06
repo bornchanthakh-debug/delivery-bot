@@ -26,7 +26,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text("🔎 កំពុងចាប់យកលេខទូរស័ព្ទ...")
 
-    # ប្រើ Pytesseract ជំនួស EasyOCR
+    # ប្រើ Pytesseract ជំនួស EasyOCR ឱ្យស្រាល
     raw_text = pytesseract.image_to_string(image)
     cleaned_text = re.sub(r'\D', '', raw_text)
     phone_match = re.search(r'\d{9,10}', cleaned_text)
