@@ -15,4 +15,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+# បញ្ជាឱ្យរត់ bot.py ពេល Server ដើរ
 CMD ["python", "bot.py"]
