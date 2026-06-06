@@ -8,7 +8,7 @@ from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardR
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters, CommandHandler
 
 # --- ការកំណត់ Environment ---
-BOT_TOKEN = os.getenv('BOT_TOKEN')
+BOT_TOKEN = os.getenv('8726446573:AAGlSh4ZrIOJIeeP53CS8O27AIJqSgIxai8')
 BOT_USERNAME = 'autosenderBaggage_phone_bot'
 GROUP_CHAT_ID = '-5116254772'
 
